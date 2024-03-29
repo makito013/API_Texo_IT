@@ -1,3 +1,7 @@
+# Backend
+
+This repository hosts an API built with NestJS and an SQLite database. It features automatic data importation, seamlessly integrating information into the database upon application initialization. Designed for efficiency and ease of use, the API ensures a streamlined data management experience.
+
 ## Quick Start
 
 To run the project and test it quickly, rename the .env.sample file to .env and then execute the command
