@@ -47,7 +47,7 @@ yarn migration:run
 to create a new migration use the command changing {name_table} to the name of the table
 
 ```bash
-yarn migration:generate src/common/database/migrations/{name_table}
+yarn migration:generate -- src/common/database/migrations/{name_table}
 ```
 
 ## Environment
