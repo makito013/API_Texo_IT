@@ -10,11 +10,11 @@ export class AddMovieDto {
   @IsNotEmpty()
   year: number;
 
-  @ApiProperty({ example: 'John Cena' })
-  @IsNotEmpty()
-  producer: string;
-
   @ApiProperty({ example: true })
   @IsNotEmpty()
   award: boolean;
+
+  @ApiProperty({ example: ['produtor1', 'produtor2'] })
+  @IsNotEmpty()
+  producers: string[];
 }

@@ -1,28 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Movies } from './entities/movies.entity';
 import { AddMovieDto } from './dto/add_movie.dto';
-import {
-  IntervalAwardResponse,
-  IntervalData,
-} from './dto/interval_award_response.dto';
+import { IntervalData } from './dto/interval_award_response.dto';
 import { plainToInstance } from 'class-transformer';
 import { FindAllDto } from './dto/find_all_response.dto';
-import { IPaginationOptions } from 'src/common/utils/types/pagination-options';
+import { IPaginationOptions } from '../common/utils/types/pagination-options';
+import { Producers } from '../producers/entities/producers.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class MoviesService {
   constructor(
     @InjectRepository(Movies)
     private moviesRepository: Repository<Movies>,
-  ) {}
 
-  create(createProfileDto: AddMovieDto) {
-    return this.moviesRepository.save(
-      this.moviesRepository.create(createProfileDto),
-    );
-  }
+    @InjectRepository(Producers)
+    private producersRepository: Repository<Producers>,
+  ) {}
 
   async findAll({
     year,
@@ -50,7 +45,7 @@ export class MoviesService {
       },
       skip: limit * page,
       take: limit,
-      relations: ['movieStudios', 'movieStudios.studio'],
+      relations: ['movieStudios', 'movieStudios.studio', 'producers'],
     });
 
     return {
@@ -101,29 +96,50 @@ export class MoviesService {
       .getRawMany();
   }
 
-  async addMovie(movie: AddMovieDto) {
-    const movieToInsert = this.moviesRepository.create(movie);
-    await this.moviesRepository.save(movieToInsert);
-    return movieToInsert;
+  async addMovie(addProps: AddMovieDto) {
+    const { producers, ...movieProp } = addProps;
+
+    const movie = this.moviesRepository.create(movieProp);
+
+    const producerEntities = [];
+    for (const producerName of producers) {
+      let producer = await this.producersRepository.findOne({
+        where: { name: producerName },
+      });
+
+      if (!producer) {
+        producer = this.producersRepository.create({ name: producerName });
+        await this.producersRepository.save(producer);
+      }
+
+      producerEntities.push(producer);
+    }
+
+    movie.producers = producerEntities;
+    await this.moviesRepository.save(movie);
+
+    return movie;
   }
 
-  async getMinAndMaxIntervalAward(): Promise<IntervalAwardResponse> {
-    const awardedMovies = await this.moviesRepository.find({
-      where: {
-        award: true,
-      },
-      order: { producer: 'ASC', year: 'ASC' },
-    });
+  async getMinAndMaxIntervalAward() {
+    const awardedMovies = await this.moviesRepository
+      .createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.producers', 'producer')
+      .where('movie.award = :award', { award: true })
+      .orderBy('movie.year', 'ASC')
+      .getMany();
 
     const producerWins: Record<string, number[]> = {};
-    const producerIntervals: Record<string, IntervalData[]> = {};
-
     awardedMovies.forEach((movie) => {
-      if (!producerWins[movie.producer]) {
-        producerWins[movie.producer] = [];
-      }
-      producerWins[movie.producer].push(movie.year);
+      movie.producers.forEach((producer) => {
+        if (!producerWins[producer.name]) {
+          producerWins[producer.name] = [];
+        }
+        producerWins[producer.name].push(movie.year);
+      });
     });
+
+    const producerIntervals: Record<string, IntervalData[]> = {};
 
     Object.entries(producerWins).forEach(([producer, wins]) => {
       if (wins.length > 1) {

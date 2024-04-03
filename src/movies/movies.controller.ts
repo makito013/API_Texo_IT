@@ -33,7 +33,7 @@ export class MoviesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createProfileDto: AddMovieDto) {
-    return this.moviesService.create(createProfileDto);
+    return this.moviesService.addMovie(createProfileDto);
   }
   @Get()
   @ApiOkResponse({
@@ -57,7 +57,7 @@ export class MoviesController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('year') year?: number,
     @Query('award') award?: string,
-  ): Promise<FindAllAndCountDto> {
+  ) {
     return this.moviesService.findAll({
       year,
       award,

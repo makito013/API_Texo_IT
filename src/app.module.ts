@@ -6,6 +6,7 @@ import { StudiosModule } from './studios/studios.module';
 import { DataImportService } from './common/pre_init/import_excel';
 import { SharedModule } from './shared/shared.module';
 import { ImportHistory } from './shared/entities/import_history.entity';
+import { ProducersModule } from './producers/producers.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ImportHistory } from './shared/entities/import_history.entity';
     SharedModule,
     MoviesModule,
     StudiosModule,
+    ProducersModule,
     ImportHistory,
   ],
   controllers: [],

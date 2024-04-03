@@ -1,9 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
 import { Movies } from '../../movies/entities/movies.entity';
 
-export class AddStudiosDto {
+export class AddProducersDto {
   @IsNotEmpty()
-  nameStudio: string;
+  nameProducer: string;
 
   @IsNotEmpty()
   movie: Movies;

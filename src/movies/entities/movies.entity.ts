@@ -4,6 +4,8 @@ import {
   DeleteDateColumn,
   Entity,
   Index,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -11,6 +13,7 @@ import {
 import { EntityHelper } from '../../common/utils/entity-helper';
 import { MoviesStudios } from '../../shared/entities/movies_studios.entity';
 import { Studios } from '../../studios/entities/studios.entity';
+import { Producers } from '../../producers/entities/producers.entity';
 
 @Entity({ name: 'movie' })
 export class Movies extends EntityHelper {
@@ -23,9 +26,6 @@ export class Movies extends EntityHelper {
   @Index()
   @Column({ name: 'year' })
   year: number;
-
-  @Column({ name: 'producer' })
-  producer: string;
 
   @Column({ name: 'award' })
   award: boolean;
@@ -41,4 +41,8 @@ export class Movies extends EntityHelper {
 
   @OneToMany(() => MoviesStudios, (movieStudio) => movieStudio.movie)
   movieStudios: Studios;
+
+  @ManyToMany(() => Producers, (producer) => producer.movies)
+  @JoinTable()
+  producers: Producers[];
 }

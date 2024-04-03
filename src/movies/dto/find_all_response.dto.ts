@@ -15,13 +15,6 @@ export class FindAllDto {
   year: number;
 
   @Expose()
-  @ApiProperty({
-    example: 'producer',
-    description: 'The producer of the movie',
-  })
-  producer: string;
-
-  @Expose()
   @ApiProperty({ example: true, description: 'The award of the movie' })
   award: boolean;
 
@@ -33,6 +26,11 @@ export class FindAllDto {
   @Expose()
   @ApiProperty({ example: 1, description: 'The id of the movie' })
   studio: string;
+
+  @Transform(({ obj }) => obj.producers.map((producer: any) => producer.name))
+  @Expose()
+  @ApiProperty({ example: 1, description: 'The id of the movie' })
+  producers: string[];
 
   constructor(partial: Partial<FindAllDto>) {
     Object.assign(this, partial);

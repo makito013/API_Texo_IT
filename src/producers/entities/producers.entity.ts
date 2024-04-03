@@ -5,18 +5,21 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { EntityHelper } from '../../common/utils/entity-helper';
-import { MoviesStudios } from '../../shared/entities/movies_studios.entity';
+import { Movies } from '../../movies/entities/movies.entity';
 
-@Entity({ name: 'studio' })
-export class Studios extends EntityHelper {
+@Entity({ name: 'producer' })
+export class Producers extends EntityHelper {
   @PrimaryGeneratedColumn({ name: 'id' })
   id: number;
 
   @Column({ name: 'name' })
   name: string;
+
+  @ManyToMany(() => Movies, (movie) => movie.producers)
+  movies: Movies[];
 
   @CreateDateColumn({ name: 'createdAt' })
   createdAt: Date;
@@ -26,7 +29,4 @@ export class Studios extends EntityHelper {
 
   @DeleteDateColumn({ name: 'deleteAt' })
   deleteAt: Date;
-
-  @OneToMany(() => MoviesStudios, (moviesStudios) => moviesStudios.studio)
-  movieStudios: MoviesStudios[];
 }

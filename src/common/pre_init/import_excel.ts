@@ -8,10 +8,7 @@ import { StudiosService } from '../../studios/studios.service';
 
 const statAsync = promisify(fs.stat);
 
-const path =
-  process.env.NODE_ENV === 'test'
-    ? `${__dirname}/../test/movielist.csv`
-    : `${__dirname}/../../../movielist.csv`;
+const path = `${__dirname}/../../../movielist.csv`;
 const expectedColumns = ['title', 'year', 'winner', 'producers', 'studios'];
 
 @Injectable()
@@ -67,9 +64,12 @@ export class DataImportService implements OnModuleInit {
                 title: item.title,
                 year: parseInt(item.year, 10),
                 award: Boolean(item.winner),
-                producer: String(item.producers).toLowerCase(),
+                producers: item.producers
+                  .replace(/\bAND\b/gi, ',')
+                  .replace(', ,', ',')
+                  ?.split(',')
+                  .map((prop) => String(prop).toLocaleLowerCase().trim()),
               };
-
               try {
                 const movieBD = await this.moviesService.addMovie(movie);
                 await this.studiosService.addStudioToMovie({
