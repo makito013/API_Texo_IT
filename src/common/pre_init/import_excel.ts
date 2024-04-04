@@ -27,13 +27,14 @@ export class DataImportService implements OnModuleInit {
     try {
       const stats = await statAsync(path);
       const lastModified = stats.mtime;
-      const latestImport =
-        await this.importHistoryService.verifyLatest(lastModified);
+      // TODO: Removed verification to last modification, now, all imports are executed but don't have duplicate movies
+      // const latestImport =
+      //   await this.importHistoryService.verifyLatest(lastModified);
 
-      if (latestImport && latestImport.length) {
-        console.log('Spreadsheet has already been imported');
-        return;
-      }
+      // if (latestImport && latestImport.length) {
+      //   console.log('Spreadsheet has already been imported');
+      //   return;
+      // }
 
       await this.importDataFromCsv(lastModified);
     } catch (err) {
@@ -56,7 +57,7 @@ export class DataImportService implements OnModuleInit {
           }
           results.push(data);
         })
-        .on('error', reject) // Rejeita a promessa em caso de erro no stream
+        .on('error', reject)
         .on('end', async () => {
           for (const item of results) {
             if (item.title && item.year && item.producers && item.studios) {
@@ -71,11 +72,17 @@ export class DataImportService implements OnModuleInit {
                   .map((prop) => String(prop).toLocaleLowerCase().trim()),
               };
               try {
-                const movieBD = await this.moviesService.addMovie(movie);
-                await this.studiosService.addStudioToMovie({
-                  movie: movieBD,
-                  nameStudio: String(item.studios).toLocaleLowerCase(),
+                const haveMovie = await this.moviesService.getByName({
+                  movieName: movie.title,
                 });
+
+                if (!haveMovie.length) {
+                  const movieBD = await this.moviesService.addMovie(movie);
+                  await this.studiosService.addStudioToMovie({
+                    movie: movieBD,
+                    nameStudio: String(item.studios).toLocaleLowerCase(),
+                  });
+                }
               } catch (error) {
                 console.error('Erro ao adicionar filme: ', error);
               }

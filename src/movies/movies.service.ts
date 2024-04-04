@@ -121,6 +121,16 @@ export class MoviesService {
     return movie;
   }
 
+  async getByName({ movieName }: { movieName: string }) {
+    const movie = this.moviesRepository.find({
+      where: {
+        title: movieName,
+      },
+    });
+
+    return movie;
+  }
+
   async getMinAndMaxIntervalAward() {
     const awardedMovies = await this.moviesRepository
       .createQueryBuilder('movie')
@@ -139,20 +149,20 @@ export class MoviesService {
       });
     });
 
+    console.log(producerWins);
+
     const producerIntervals: Record<string, IntervalData[]> = {};
 
     Object.entries(producerWins).forEach(([producer, wins]) => {
       if (wins.length > 1) {
         producerIntervals[producer] = [];
-        for (let i = 1; i < wins.length; i++) {
-          const intervalData: IntervalData = {
-            producer,
-            interval: wins[i] - wins[i - 1],
-            previousWin: wins[i - 1],
-            followingWin: wins[i],
-          };
-          producerIntervals[producer].push(intervalData);
-        }
+        const intervalData: IntervalData = {
+          producer,
+          interval: wins[wins.length - 1] - wins[0],
+          previousWin: wins[0],
+          followingWin: wins[wins.length - 1],
+        };
+        producerIntervals[producer].push(intervalData);
       }
     });
 
@@ -163,7 +173,10 @@ export class MoviesService {
 
     Object.values(producerIntervals).forEach((intervals) => {
       intervals.forEach((intervalData) => {
-        if (intervalData.interval < minInterval) {
+        if (
+          intervalData.interval < minInterval &&
+          intervalData.interval !== 0
+        ) {
           minInterval = intervalData.interval;
           minIntervals = [intervalData];
         } else if (intervalData.interval === minInterval) {
