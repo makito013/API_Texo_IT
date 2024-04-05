@@ -149,22 +149,23 @@ export class MoviesService {
       });
     });
 
-    console.log(producerWins);
-
     const producerIntervals: Record<string, IntervalData[]> = {};
 
     Object.entries(producerWins).forEach(([producer, wins]) => {
       if (wins.length > 1) {
         producerIntervals[producer] = [];
-        const intervalData: IntervalData = {
-          producer,
-          interval: wins[wins.length - 1] - wins[0],
-          previousWin: wins[0],
-          followingWin: wins[wins.length - 1],
-        };
-        producerIntervals[producer].push(intervalData);
+        for (let i = 1; i < wins.length; i++) {
+          const intervalData: IntervalData = {
+            producer,
+            interval: wins[i] - wins[i - 1],
+            previousWin: wins[i - 1],
+            followingWin: wins[i],
+          };
+          producerIntervals[producer].push(intervalData);
+        }
       }
     });
+
 
     let minIntervals: IntervalData[] = [];
     let maxIntervals: IntervalData[] = [];

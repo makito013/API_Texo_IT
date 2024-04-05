@@ -1,12 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { promisify } from 'util';
 import * as fs from 'fs';
 import * as csv from 'csv-parser';
 import { MoviesService } from '../../movies/movies.service';
 import { ImportHistoryService } from '../../shared/shared.service';
 import { StudiosService } from '../../studios/studios.service';
-
-const statAsync = promisify(fs.stat);
 
 const path = `${__dirname}/../../../movielist.csv`;
 const expectedColumns = ['title', 'year', 'winner', 'producers', 'studios'];
@@ -25,23 +22,12 @@ export class DataImportService implements OnModuleInit {
 
   private async checkFile() {
     try {
-      const stats = await statAsync(path);
-      const lastModified = stats.mtime;
-      // TODO: Removed verification to last modification, now, all imports are executed but don't have duplicate movies
-      // const latestImport =
-      //   await this.importHistoryService.verifyLatest(lastModified);
-
-      // if (latestImport && latestImport.length) {
-      //   console.log('Spreadsheet has already been imported');
-      //   return;
-      // }
-
-      await this.importDataFromCsv(lastModified);
+      await this.importDataFromCsv();
     } catch (err) {
       console.error('Erro ao acessar o arquivo:', err);
     }
   }
-  private async importDataFromCsv(lastModified: Date): Promise<void> {
+  private async importDataFromCsv(): Promise<void> {
     return new Promise((resolve, reject) => {
       const results = [];
 
@@ -72,17 +58,11 @@ export class DataImportService implements OnModuleInit {
                   .map((prop) => String(prop).toLocaleLowerCase().trim()),
               };
               try {
-                const haveMovie = await this.moviesService.getByName({
-                  movieName: movie.title,
+                const movieBD = await this.moviesService.addMovie(movie);
+                await this.studiosService.addStudioToMovie({
+                  movie: movieBD,
+                  nameStudio: String(item.studios).toLocaleLowerCase(),
                 });
-
-                if (!haveMovie.length) {
-                  const movieBD = await this.moviesService.addMovie(movie);
-                  await this.studiosService.addStudioToMovie({
-                    movie: movieBD,
-                    nameStudio: String(item.studios).toLocaleLowerCase(),
-                  });
-                }
               } catch (error) {
                 console.error('Erro ao adicionar filme: ', error);
               }
@@ -94,10 +74,6 @@ export class DataImportService implements OnModuleInit {
             }
           }
 
-          this.importHistoryService.add({
-            date: lastModified,
-            rows: results.length,
-          });
           console.log('CSV file successfully processed');
           resolve();
         });
